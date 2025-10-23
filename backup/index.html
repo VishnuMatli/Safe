@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National/International Selection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="absolute top-4 right-4 z-10">
+        <label for="language-select" class="sr-only">Select Language</label>
+        <select id="language-select" class="language-select bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-pointer">
+            <option value="english" selected>English</option>
+            <optgroup label="Indian Languages">
+                <option value="hindi">Hindi</option>
+                <option value="bengali">Bengali</option>
+                <option value="marathi">Marathi</option>
+                <option value="telugu">Telugu</option>
+                <option value="tamil">Tamil</option>
+            </optgroup>
+            <optgroup label="International Languages">
+                <option value="mandarin">Mandarin Chinese</option>
+                <option value="spanish">Spanish</option>
+                <option value="french">French</option>
+                <option value="arabic">Arabic</option>
+            </optgroup>
+        </select>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm relative md:p-8">
+        
+        <div class="flex justify-center mb-4">
+            <img src="images/ic_launcher.png" alt="Logo" class="h-16 w-16">
+        </div>
+
+        <div class="text-center">
+            <h1 id="welcome-title" class="text-2xl font-bold text-gray-900 mb-2 mt-4 md:text-3xl">Welcome</h1>
+            <p id="welcome-text" class="text-gray-600 mb-8 text-sm md:text-base">Please choose your region to continue.</p>
+        </div>
+
+        <div class="flex flex-col gap-4 mb-6">
+            <button id="national-button" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl transition duration-300 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Customer
+            </button>
+        </div>
+
+        <div class="w-full">
+            <button id="auth-login-button" class="w-full text-blue-600 font-semibold py-3 border-2 border-blue-600 rounded-xl transition duration-300 ease-in-out hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Authority Login
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const languageSelect = document.getElementById('language-select');
+            const welcomeTitle = document.getElementById('welcome-title');
+            const welcomeText = document.getElementById('welcome-text');
+            const nationalButton = document.getElementById('national-button');
+            const internationalButton = document.getElementById('international-button');
+            const authLoginButton = document.getElementById('auth-login-button');
+            
+            const nationalInternationalButtons = document.querySelectorAll('#national-button, #international-button');
+            nationalInternationalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const selectedLang = languageSelect.value;
+                    localStorage.setItem('app-language', selectedLang);
+                    window.location.assign('./index2.html');
+                });
+            });
+
+            authLoginButton.addEventListener('click', () => {
+                const selectedLang = languageSelect.value;
+                localStorage.setItem('app-language', selectedLang);
+                window.location.assign('./Authoritylogin.html');
+            });
+
+            const textElements = [
+                { id: 'welcome-title', element: welcomeTitle, original: 'Welcome' },
+                { id: 'welcome-text', element: welcomeText, original: 'Please choose your region to continue.' },
+                { id: 'national-button', element: nationalButton, original: 'National' },
+                { id: 'international-button', element: internationalButton, original: 'International' },
+                { id: 'auth-login-button', element: authLoginButton, original: 'Authority Login' }
+            ];
+
+            const languages = [
+                "english", "hindi", "bengali", "marathi", "telugu", "tamil", 
+                "mandarin", "spanish", "french", "arabic"
+            ];
+            
+            const translationsCache = {};
+
+            async function translateAllLanguages() {
+                const prompt = `Translate the following English texts to JSON format, where keys are language names and values are objects containing the translations for each text element. The original texts are: "Welcome", "Please choose your region to continue.", "National", "International", "Authorization Login". The languages to translate to are: ${languages.join(', ')}.
+
+                Example JSON format:
+                {
+                    "english": { "title": "Welcome", "text": "Please choose your region to continue.", "national": "National", "international": "International", "login": "Authorization Login" },
+                    "hindi": { "title": "स्वागत है", "text": "जारी रखने के लिए कृपया अपना क्षेत्र चुनें।", "national": "राष्ट्रीय", "international": "अंतर्राष्ट्रीय", "login": "प्रमाणीकरण लॉगिन" },
+                    ...
+                }`;
+
+                const apiKey = "AIzaSyAEuL0enNhLpKlO39D-1pNp2mMQKozLsfg"; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                let retries = 0;
+                const maxRetries = 3;
+                let delay = 1000;
+
+                while (retries < maxRetries) {
+                    try {
+                        const payload = {
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                responseMimeType: "application/json",
+                                responseSchema: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        "english": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "hindi": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "bengali": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "marathi": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "telugu": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "tamil": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "mandarin": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "spanish": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "french": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } },
+                                        "arabic": { "type": "OBJECT", "properties": { "title": { "type": "STRING" }, "text": { "type": "STRING" }, "national": { "type": "STRING" }, "international": { "type": "STRING" }, "login": { "type": "STRING" } } }
+                                    }
+                                }
+                            }
+                        };
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.status === 429) {
+                            retries++;
+                            await new Promise(res => setTimeout(res, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        if (!response.ok) {
+                            throw new Error(`API call failed with status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        return JSON.parse(jsonText);
+                    } catch (error) {
+                        retries++;
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    }
+                }
+                return {};
+            }
+            
+            function updatePageLanguage(lang) {
+                const currentTranslations = translationsCache[lang];
+                if (currentTranslations) {
+                    welcomeTitle.textContent = currentTranslations.title;
+                    welcomeText.textContent = currentTranslations.text;
+                    nationalButton.textContent = currentTranslations.national;
+                    internationalButton.textContent = currentTranslations.international;
+                    authLoginButton.textContent = currentTranslations.login;
+                }
+            }
+            
+            // Function to set the page language and save it to localStorage
+            function setLanguage(lang) {
+                updatePageLanguage(lang);
+                localStorage.setItem('app-language', lang);
+            }
+
+            // Get saved language from localStorage, or default to english
+            const savedLang = localStorage.getItem('app-language') || 'english';
+            languageSelect.value = savedLang;
+
+            // Initial call to translate all languages and cache the result
+            translateAllLanguages().then(allTranslations => {
+                Object.assign(translationsCache, allTranslations);
+                // Update the UI with the initial language from the cache
+                updatePageLanguage(savedLang);
+            });
+
+            // Add event listener to the dropdown
+            languageSelect.addEventListener('change', (event) => {
+                setLanguage(event.target.value);
+            });
+        });
+    </script>
+</body>
+</html>

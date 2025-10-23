@@ -1,0 +1,1 @@
+https://www.duckdns.org/update?domains=safetour&token=31e20f9b-dcda-48cb-b3f9-ada1364ec008&ip=152.57.228.199&ipv6=2409:40f0:11db:359:5068:1726:5eb9:22fb&verbose=true&clear=true
