@@ -27,7 +27,7 @@ const serverOptions = {
 };
 const httpsServer = https.createServer(serverOptions, app);
 
-mongoose.connect('mongodb+srv://sih:1234@safetourism.37en0mq.mongodb.net/tourist_app?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb+srv://@/tourist_app?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB Atlas', err));
 
@@ -75,4 +75,5 @@ wss.on('connection', ws => {
 
 httpsServer.listen(port, () => {
     console.log(`Server running at https://${ipAddress}:${port}`);
+
 });
